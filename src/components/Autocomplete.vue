@@ -64,9 +64,12 @@ export default {
   props: {
     /**
      * Data source for the results
+     *   `String` is a url, typed input will be appended
+     *   `Function` received typed input, and must return a string; to be used as a url
+     *   `Array` and `Object` (see `results-property`) are used directly
      */
     source: {
-      type: [String, Array, Object],
+      type: [String, Function, Array, Object],
       required: true
     },
     /**
@@ -200,12 +203,19 @@ export default {
       this.selectedIndex = null
       switch (typeof this.source) {
         case 'string':
+        case 'function':
           // No resource search with no input
           if (!this.display || this.display.length < 1) {
             return
           }
           this.loading = true
-          this.resourceSearch()
+
+          if (typeof this.source === 'string') {
+            this.resourceSearch(this.source + this.display)
+          } else {
+            this.resourceSearch(this.source(this.display))
+          }
+
           break
         case 'object':
           this.loading = true
@@ -216,7 +226,7 @@ export default {
       }
     },
 
-    resourceSearch: debounce(function () {
+    resourceSearch: debounce(function (url) {
       if (!this.display) {
         this.results = []
         this.loading = false
@@ -224,7 +234,7 @@ export default {
       }
 
       // query param should be a setting, rather than appended.
-      let promise = fetch(this.source + this.display, {
+      let promise = fetch(url, {
         method: 'get',
         credentials: 'same-origin',
         headers: this.getHeaders()
