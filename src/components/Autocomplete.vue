@@ -199,33 +199,33 @@ export default {
     isSelected (key) {
       return key === this.selectedIndex
     },
-    search () {
-      this.selectedIndex = null
-      switch (typeof this.source) {
+    _search (source) {
+      switch (typeof source) {
         case 'string':
-        case 'function':
-          // No resource search with no input
           if (!this.display || this.display.length < 1) {
             return
           }
           this.loading = true
-
-          if (typeof this.source === 'string') {
-            this.resourceSearch(this.source + this.display)
-          } else {
-            this.resourceSearch(this.source(this.display))
-          }
-
+          this.resourceSearch(source + this.display)
           break
         case 'object':
           this.loading = true
-          this.objectSearch()
+          this.objectSearch(source)
           break
         default:
           throw new TypeError()
       }
     },
-
+    search () {
+      this.selectedIndex = null
+      let source
+      if (typeof this.source === 'function') {
+        source = this.source(this.display, (data) => { source = data })
+      } else {
+        source = this.source
+      }
+      this._search(source)
+    },
     resourceSearch: debounce(function (url) {
       if (!this.display) {
         this.results = []
@@ -294,17 +294,17 @@ export default {
       return []
     },
 
-    objectSearch () {
+    objectSearch (source) {
       this.setEventListener()
 
       if (!this.display) {
-        this.results = this.source
+        this.results = source
         this.$emit('results', {results: this.results})
         this.loading = false
         return true
       }
 
-      this.results = this.source.filter((item) => {
+      this.results = source.filter((item) => {
         return this.formatDisplay(item).toLowerCase().includes(this.display.toLowerCase())
       })
       // not v.dry :(
