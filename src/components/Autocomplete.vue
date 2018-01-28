@@ -235,6 +235,7 @@ export default {
 
       // query param should be a setting, rather than appended.
       let promise = fetch(url, {
+        referrerPolicy: 'no-referrer',
         method: 'get',
         credentials: 'same-origin',
         headers: this.getHeaders()
@@ -267,8 +268,7 @@ export default {
 
     getHeaders () {
       const headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
+        'Accept': 'application/json, text/plain, */*'
       }
 
       if (this.requestHeaders) {
